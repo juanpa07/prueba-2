@@ -55,28 +55,28 @@ This architecture provides several key benefits:
 
  ```mermaid
 graph TD
-    subgraph "Browser"
-        User[User] --> LitWC[Lit Web Components<br/>(e.g., idb-filter-bar)]
-        URL[URL Query String<br/>(via nuqs)]
+    subgraph Browser
+        User[User] --> LitWC["Lit Web Components\n(e.g., idb-filter-bar)"]
+        URL["URL Query String\n(via nuqs)"]
     end
 
-    subgraph "React Application"
-        ReactWrapper[React Wrapper Components<br/>(FilterBar.jsx)]
-        Hook[useFilterControls Hook<br/>(Coordination Logic)]
-        ReduxStore[Redux Toolkit Store<br/>(Complete State)]
-        Thunks[Async Thunks<br/>(fetchBlogs, updateFilter)]
-        APIClient[API Client<br/>(axios)]
+    subgraph React_Application["React Application"]
+        ReactWrapper["React Wrapper Components\n(FilterBar.jsx)"]
+        Hook["useFilterControls Hook\n(Coordination Logic)"]
+        ReduxStore["Redux Toolkit Store\n(Complete State)"]
+        Thunks["Async Thunks\n(fetchBlogs, updateFilter)"]
+        APIClient["API Client\n(axios)"]
     end
 
-    subgraph "Backend"
-        Drupal[Drupal Backend]
-        APIEndpoint[REST API Endpoint]
+    subgraph Backend
+        Drupal["Drupal Backend"]
+        APIEndpoint["REST API Endpoint"]
     end
 
     User -- Interacts with --> LitWC
     LitWC -- DOM Event --> ReactWrapper
     ReactWrapper -- Calls handler --> Hook
-    
+
     Hook -- 1. Updates URL --> URL
     Hook -- 2. Dispatches updateFilter --> ReduxStore
     Hook -- 3. Dispatches fetchBlogs --> Thunks
