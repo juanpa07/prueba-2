@@ -1,369 +1,315 @@
-# Informe de Cambios - Registro de Componentes Lit
+# Technical Documentation: React Search Blogs
 
-**Fecha:** 2025-11-21
-**Proyecto:** Portfolio Results - IDB Impact Framework
-**Alcance:** `project/design/src/components/`
+## 1. Getting Started
 
----
+This section provides instructions on how to set up and run the project on a local development environment.
 
-## 🎯 Objetivo del Cambio
+### Prerequisites
 
-Prevenir errores de **registro duplicado** de Custom Elements de Lit cuando se integra el componente React Portfolio Results con páginas Drupal que ya han registrado estos componentes.
+Make sure you have Node.js and npm installed on your machine. The project specifies a Node.js version in the `package.json` file.
 
-## ❌ Problema Identificado
+### Installation
 
-### Contexto:
-El template React de **Portfolio Results** utiliza componentes Lit del Design System (IDB) que ya están registrados por Drupal al cargar la página.
+1.  Navigate to the project directory:
+    ```bash
+    cd project/modules/idb_blogs/js/react_search_blogs
+    ```
 
-### Error Original:
-```javascript
-DOMException: Failed to execute 'define' on 'CustomElementRegistry':
-the name "idb-table" has already been used with this registry
-```
+2.  Install the required dependencies using npm:
+    ```bash
+    npm install
+    ```
 
-**Causa raíz:**
-- Drupal carga y registra los componentes Lit al inicializar la página
-- Portfolio Results (React) intenta registrar los mismos componentes nuevamente
-- El decorador `@customElement('component-name')` de Lit registra el componente automáticamente
-- CustomElementRegistry no permite registrar el mismo nombre dos veces
+### Running the Development Server
 
-## ✅ Solución Implementada
+To start the Vite development server and run the application locally, use the following command:
 
-### Cambio en el Patrón de Registro
-
-**ANTES (causaba error):**
-```typescript
-import { customElement } from 'lit/decorators.js';
-
-@customElement('idb-table')
-export class IdbTable extends OutlineElement {
-  // ... component code
-}
-```
-
-**DESPUÉS (previene duplicados):**
-```typescript
-import { property } from 'lit/decorators.js';  // Removido customElement
-
-// Sin decorador @customElement
-export class IdbTable extends OutlineElement {
-  // ... component code
-}
-
-// Registro condicional al final del archivo
-customElements.get("idb-table") ||
-  customElements.define("idb-table", IdbTable);
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'idb-table': IdbTable;
-  }
-}
-```
-
-### Explicación del Patrón
-
-```typescript
-customElements.get("idb-table") ||
-  customElements.define("idb-table", IdbTable);
-```
-
-**Lógica:**
-1. `customElements.get("idb-table")` - Verifica si el componente ya está registrado
-2. Si retorna `undefined` (no existe) → se ejecuta `customElements.define()`
-3. Si retorna el componente existente → NO se ejecuta `define()`, evitando el error
-4. Operador `||` (OR) actúa como guard clause
-
-**TypeScript Declaration:**
-```typescript
-declare global {
-  interface HTMLElementTagNameMap {
-    'idb-table': IdbTable;
-  }
-}
-```
-- Mantiene el type safety de TypeScript
-- Permite autocompletado en editores
-- Documenta el mapping entre tag name y clase
-
----
-
-## 📋 Componentes Modificados
-
-### Base Components (3 archivos)
-| Componente | Ubicación | Tag Name |
-|------------|-----------|----------|
-| **OutlineTabGroup** | `base/outline-tabs/outline-tab-group/outline-tab-group.ts` | `outline-tab-group` |
-| **OutlineTabPanel** | `base/outline-tabs/outline-tab-panel/outline-tab-panel.ts` | `outline-tab-panel` |
-| **OutlineTab** | `base/outline-tabs/outline-tab/outline-tab.ts` | `outline-tab` |
-
-### IDB Components (8 archivos)
-| Componente | Ubicación | Tag Name | Uso en Portfolio Results |
-|------------|-----------|----------|--------------------------|
-| **IdbTable** | `idb/idb-table/idb-table.ts` | `idb-table` | ✅ Tabla principal de datos |
-| **IdbAccordion** | `idb/idb-accordion/idb-accordion.ts` | `idb-accordion` | ✅ Vista móvil |
-| **IdbAccordionPanel** | `idb/idb-accordion-panel/idb-accordion-panel.ts` | `idb-accordion-panel` | ✅ Paneles individuales |
-| **IdbSectionWrapper** | `idb/idb-section-wrapper/idb-section-wrapper.ts` | `idb-section-wrapper` | ✅ Layout wrapper |
-| **IdbTabGroup** | `idb/idb-tabs/idb-tab-group/idb-tab-group.ts` | `idb-tab-group` | ✅ Tabs container |
-| **IdbTabPanel** | `idb/idb-tabs/idb-tab-panel/idb-tab-panel.ts` | `idb-tab-panel` | ✅ Tab content |
-| **IdbTabMemo** | `idb/idb-tabs/idb-tab-memo/idb-tab-memo.ts` | `idb-tab-memo` | ✅ Tab variant |
-| **IdbTab** | `idb/idb-tabs/idb-tab/idb-tab.ts` | `idb-tab` | ✅ Tab buttons |
-
-**Total:** 11 archivos modificados
-**Líneas añadidas:** +95
-**Líneas removidas:** -25
-**Cambio neto:** +70 líneas
-
-### Listado Completo de Archivos Modificados
-
-#### Base Components (3 archivos)
-```
-project/design/src/components/base/outline-tabs/
-├── outline-tab-group/outline-tab-group.ts
-├── outline-tab-panel/outline-tab-panel.ts
-└── outline-tab/outline-tab.ts
-```
-
-#### IDB Components (8 archivos)
-```
-project/design/src/components/idb/
-├── idb-accordion-panel/idb-accordion-panel.ts
-├── idb-accordion/idb-accordion.ts
-├── idb-section-wrapper/idb-section-wrapper.ts
-├── idb-table/idb-table.ts
-└── idb-tabs/
-    ├── idb-tab-group/idb-tab-group.ts
-    ├── idb-tab-memo/idb-tab-memo.ts
-    ├── idb-tab-panel/idb-tab-panel.ts
-    └── idb-tab/idb-tab.ts
-```
-
-#### Rutas Completas
 ```bash
-# Base Components
-project/design/src/components/base/outline-tabs/outline-tab-group/outline-tab-group.ts
-project/design/src/components/base/outline-tabs/outline-tab-panel/outline-tab-panel.ts
-project/design/src/components/base/outline-tabs/outline-tab/outline-tab.ts
-
-# IDB Components
-project/design/src/components/idb/idb-accordion-panel/idb-accordion-panel.ts
-project/design/src/components/idb/idb-accordion/idb-accordion.ts
-project/design/src/components/idb/idb-section-wrapper/idb-section-wrapper.ts
-project/design/src/components/idb/idb-table/idb-table.ts
-project/design/src/components/idb/idb-tabs/idb-tab-group/idb-tab-group.ts
-project/design/src/components/idb/idb-tabs/idb-tab-memo/idb-tab-memo.ts
-project/design/src/components/idb/idb-tabs/idb-tab-panel/idb-tab-panel.ts
-project/design/src/components/idb/idb-tabs/idb-tab/idb-tab.ts
+npm run dev
 ```
 
----
+This will start a hot-reloading development server, typically available at a local URL like `http://localhost:5173`. The application will automatically reload as you make changes to the source code.
 
-## 🔄 Flujo de Registro
+## 2. Introduction
 
-### Escenario 1: Drupal + Portfolio Results
-```
-1. Usuario carga página Drupal
-   └─> Drupal registra: idb-table, idb-accordion, etc.
+This document provides a comprehensive technical overview of the **React Search Blogs** project. It is intended for developers to quickly understand the project's architecture, data flow, state management strategy, and integration patterns.
 
-2. Portfolio Results bundle carga
-   └─> customElements.get("idb-table") → retorna IdbTable existente
-   └─> NO ejecuta define() → Sin errores ✅
+The project is a highly interactive search and filtering interface for blog posts. It is built with React and Redux Toolkit and is designed to integrate seamlessly with a Drupal backend and Lit-based Web Components. Its core purpose is to provide a fast, modern, and stateful user experience, allowing users to filter, search, and paginate through blog posts without page reloads.
 
-3. Ambos sistemas usan los mismos componentes registrados
-```
+## 3. Core Architecture: Dual State Management (URL + Redux)
 
-### Escenario 2: Portfolio Results standalone
-```
-1. Portfolio Results carga sin Drupal
-   └─> customElements.get("idb-table") → retorna undefined
+The application employs a dual state management strategy where both the **URL** and **Redux** maintain synchronized state, with explicit coordination between them.
 
-2. Ejecuta customElements.define("idb-table", IdbTable)
-   └─> Componente registrado correctamente ✅
+-   **URL State (via `nuqs`):** The URL query parameters store filter values as simple strings/arrays (e.g., `?topics=Education&page=2`). The `nuqs` library provides React hooks (`useFiltersQuery`, `usePaginationQuery`) to read from and write to these URL parameters.
+-   **Redux State (In-Memory):** The Redux store holds the complete application state, including filter objects with both `label` and `value` properties, blog posts, loading states, and pagination metadata. React components subscribe to Redux to render the UI.
+-   **Initial Load (URL → Redux):** On page load, if URL parameters exist, the `useFilterControls` hook reads them, converts label strings to full filter objects (with `label` and `value`), and dispatches `updateFilter` to populate Redux.
+-   **User Interaction (URL + Redux):** When a user applies filters, the application performs three sequential actions:
+    1. Updates the URL via `nuqs` setters (`setFilters`, `setPage`)
+    2. Updates Redux via `dispatch(updateFilter(...))`
+    3. Triggers data fetch via `dispatch(fetchBlogs())` or `dispatch(fetchAuthors())`
 
-3. Portfolio Results funciona independientemente
-```
+This architecture provides several key benefits:
+-   **Shareable & Bookmarkable URLs:** Users can copy, paste, and bookmark URLs with their specific search criteria applied.
+-   **Browser History:** The browser's back and forward buttons work as expected, navigating through the user's search history.
+-   **Resilient State:** Reloading the page preserves the complete application state.
 
----
+ ```mermaid
+graph TD
+    subgraph Browser
+        User[User] --> LitWC["Lit Web Components\n(e.g., idb-filter-bar)"]
+        URL["URL Query String\n(via nuqs)"]
+    end
 
-## 🧪 Casos de Prueba
+    subgraph React_Application["React Application"]
+        ReactWrapper["React Wrapper Components\n(FilterBar.jsx)"]
+        Hook["useFilterControls Hook\n(Coordination Logic)"]
+        ReduxStore["Redux Toolkit Store\n(Complete State)"]
+        Thunks["Async Thunks\n(fetchBlogs, updateFilter)"]
+        APIClient["API Client\n(axios)"]
+    end
 
-### ✅ Test 1: Carga en página Drupal con componentes pre-registrados
-**Resultado esperado:** No hay errores en consola, componentes funcionan correctamente
+    subgraph Backend
+        Drupal["Drupal Backend"]
+        APIEndpoint["REST API Endpoint"]
+    end
 
-### ✅ Test 2: Carga en página standalone sin Drupal
-**Resultado esperado:** Componentes se registran y funcionan correctamente
+    User -- Interacts with --> LitWC
+    LitWC -- DOM Event --> ReactWrapper
+    ReactWrapper -- Calls handler --> Hook
 
-### ✅ Test 3: Múltiples instancias de Portfolio Results en misma página
-**Resultado esperado:** Primera instancia registra, siguientes reusan componentes
+    Hook -- 1. Updates URL --> URL
+    Hook -- 2. Dispatches updateFilter --> ReduxStore
+    Hook -- 3. Dispatches fetchBlogs --> Thunks
 
-### ✅ Test 4: Verificación de TypeScript
-**Resultado esperado:** No hay errores de tipo, autocompletado funciona
+    Thunks -- Reads state via selector --> ReduxStore
+    Thunks -- HTTP Request --> APIClient
+    APIClient -- Calls --> APIEndpoint
+    APIEndpoint -- Returns data --> APIClient
+    APIClient -- Resolves --> Thunks
+    Thunks -- Dispatches setBlogs --> ReduxStore
 
----
+    ReactWrapper -- Subscribes to --> ReduxStore
+    URL -- On initial load --> Hook
+    Hook -- Converts & dispatches --> ReduxStore
 
-## 📊 Estadísticas de Cambios
-
-```
-project/design/src/components/
-├── base/outline-tabs/
-│   ├── outline-tab-group.ts        +6 -2
-│   ├── outline-tab-panel.ts        +8 -3
-│   └── outline-tab.ts              +6 -2
-│
-└── idb/
-    ├── idb-accordion-panel.ts      +12 -2
-    ├── idb-accordion.ts            +12 -2
-    ├── idb-section-wrapper.ts      +12 -2
-    ├── idb-table.ts                +13 -2
-    └── idb-tabs/
-        ├── idb-tab-group.ts        +12 -2
-        ├── idb-tab-memo.ts         +16 -4
-        ├── idb-tab-panel.ts        +11 -2
-        └── idb-tab.ts              +12 -2
-```
-
----
-
-## 🔧 Cambios por Archivo
-
-### Patrón Consistente Aplicado:
-
-**1. Remover import del decorador:**
-```diff
-- import { customElement, property } from 'lit/decorators.js';
-+ import { property } from 'lit/decorators.js';
+    classDef browser fill:#e3f2fd,stroke:#333;
+    classDef react fill:#e8f5e9,stroke:#333;
+    classDef backend fill:#fbe9e7,stroke:#333;
+    class User,LitWC,URL browser;
+    class ReactWrapper,Hook,ReduxStore,Thunks,APIClient react;
+    class Drupal,APIEndpoint backend;
 ```
 
-**2. Remover decorador de la clase:**
-```diff
-- @customElement('component-name')
-  export class ComponentName extends BaseClass {
+## 4. Data Flow
+
+The data flow follows a unidirectional pattern, initiated by either a page load or a user interaction.
+
+**Scenario: User Applies a Filter**
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant LitWC as Lit Web Component
+    participant FilterBar as FilterBar.jsx
+    participant Hook as useFilterControls
+    participant URL as URL (nuqs)
+    participant Redux as Redux Store
+    participant Thunk as fetchBlogs Thunk
+    participant API as Drupal REST API
+
+    User->>+LitWC: 1. Selects a filter
+    LitWC->>-FilterBar: 2. Emits 'onFilterChange' event
+
+    FilterBar->>+Hook: 3. Calls applyFilters(filterObject)
+
+    Hook->>URL: 4. setFilters() - Update URL
+    Hook->>URL: 5. setPage(1) - Reset page in URL
+
+    Hook->>+Redux: 6. dispatch(updateFilter(mappedFilters))
+    Redux-->>-Hook: Redux state updated
+
+    Hook->>+Thunk: 7. dispatch(fetchBlogs())
+    Thunk->>Redux: 8. dispatch(setIsLoading(true))
+    Thunk->>Redux: 9. Read state via selectQueryString
+    Thunk->>+API: 10. GET request with query params
+    API-->>-Thunk: 11. Returns { results, pager }
+    Thunk->>Redux: 12. dispatch(setBlogs(results))
+    Thunk->>Redux: 13. dispatch(setPager(pager))
+    Thunk-->>-Hook: Fetch complete
+
+    Redux-->>FilterBar: 14. State change propagates
+    FilterBar-->>User: 15. UI re-renders with new data
 ```
 
-**3. Agregar registro condicional al final:**
-```diff
-+ customElements.get("component-name") ||
-+   customElements.define("component-name", ComponentName);
-+
-+ declare global {
-+   interface HTMLElementTagNameMap {
-+     'component-name': ComponentName;
-+   }
-+ }
+1.  **Initial Load (URL → Redux):** On component mount, the `useFilterControls` hook checks if Redux has initial state and the URL has query parameters. If so, it converts URL filter labels to full filter objects (with `label` and `value` properties) by matching them against the `settings.filter_options` configuration, then dispatches `updateFilter` to populate Redux.
+2.  **User Interaction:** A user selects a filter in the `<idb-filter-bar>` Lit Web Component.
+3.  **Event Emission:** The Web Component emits a DOM event (`onFilterChange`) with the selected filter data.
+4.  **Event Handler (`FilterBar.jsx`):** The `FilterBar` component receives the event and calls the `applyFilters` function from the `useFilterControls` hook.
+5.  **Coordinated State Update (`useFilterControls`):** The `applyFilters` function performs three sequential operations:
+    - **Step 1:** Calls `setFilters()` and `setPage(1)` from the `nuqs` hooks to update the URL query string.
+    - **Step 2:** Dispatches `updateFilter(mappedFilters)` to update the Redux store with the new filter state.
+    - **Step 3:** Calls `dispatchByType()` which dispatches either `fetchBlogs()` or `fetchAuthors()` depending on the page type.
+6.  **API Call (`fetchBlogs` thunk):** The thunk sets `isLoading` to `true`, uses the `selectQueryString` selector to read the current Redux state and build query parameters, makes an HTTP request to the Drupal REST API, and updates Redux with the returned data.
+7.  **State Update (Redux):**
+    -   `isLoading` is set to `true`.
+    -   When the API call completes, the `setBlogs` and `setPager` reducers update the Redux store with the new posts and pagination information. `isLoading` is set to `false`.
+8.  **UI Re-render:** Components subscribed to the Redux store (like `Posts.jsx` and `Pager.jsx`) automatically re-render with the new data, showing the filtered results to the user.
+
+## 5. Folder Structure
+
+The `src` directory is organized by feature and responsibility to promote modularity and maintainability.
+
+```
+src/
+├── api/              # Axios instance and API call functions.
+├── components/       # Reusable, presentational React components.
+│   ├── posts/        # Components related to displaying posts (BlogCards, PostCard).
+│   └── filters/      # Components for filtering (FilterBar, FilterApplied).
+├── containers/       # "Smart" components connected to the Redux store.
+│   └── posts/        # The main container for displaying posts and handling effects.
+├── helpers/          # Utility functions and Lit component wrappers.
+├── hooks/            # Custom React hooks for shared logic.
+├── layouts/          # Components that define the page structure (e.g., SearchBlogsLayout).
+├── main.jsx          # The main entry point of the application.
+├── reducers/         # Redux store configuration and root reducer.
+├── routes/           # The main App component and routing logic.
+└── slices/           # Redux Toolkit slice definitions.
+    ├── blogs/        # State for posts, loading, and errors.
+    ├── filters/      # State for all filter criteria and pagination.
+    └── settings/     # State for initial application configuration.
 ```
 
----
+## 6. Key Components & Hooks
 
-## 🎨 Integración con Portfolio Results
+### `main.jsx`
+-   Initializes the Redux store.
+-   Dispatches `initializeAppSettings` to load configuration from the DOM.
+-   Wraps the `App` component with the Redux `<Provider>` and `nuqs` context.
+-   Renders the application into the DOM element `#idb-search-blogs`.
 
-### Componentes React que envuelven estos Lit components:
+### `routes/App.jsx`
+-   The root component of the application.
+-   Reads the `settings.type` from the Redux store to dynamically render the correct layout (e.g., `SearchBlogsLayout`, `TopicBlogsLayout`). This allows the same React application to serve different page types.
 
-```javascript
-// src/helpers/litComponents.jsx
-import { createComponent } from '@lit/react';
+### Hooks (`/hooks`)
+-   **`useFiltersQuery.jsx`**: Manages the state of `countries`, `topics`, `typeOfArticles`, and `search` in the URL query string using `nuqs`. Returns both the current URL filter values and setter functions (`setFilters`, `setCountries`, `setTopics`, etc.).
+-   **`usePaginationQuery.jsx`**: Manages the `page` number in the URL query string using `nuqs`. Returns `page` and `setPage`.
+-   **`useLocalStorageFilters.js`**: Manages filter persistence in localStorage with segmentation by page type. Each page type (`search_page`, `topic_page`, `author_list_page`) maintains independent filter storage. Key features:
+    -   Accepts `pageType` parameter to generate unique storage keys (e.g., `idb_blog_filters_search_page`)
+    -   Stores filters with language and timestamp for change detection
+    -   Provides `saveFilters()`, `getStoredFilters()`, `detectLanguageChange()`, and `clearStoredFilters()`
+    -   Detects language changes using `document.referrer` to differentiate from prefilled URLs
+    -   Validates stored data matches current page type
+-   **`useFilterControls.js`**: The central coordination hook that orchestrates the entire filter workflow. It combines URL state (via `nuqs` hooks), Redux state, localStorage persistence, and event handlers. Key responsibilities:
+    -   **Priority Logic**: Implements simplified three-tier priority system (updated 2025-01-11):
+        1. **Language Change** (highest): Loads from localStorage and remaps labels using `value` as immutable key
+        2. **URL has filters**: Loads from URL parameters and saves to localStorage (covers: links with filters from any source, page reloads/F5, pasted URLs)
+        3. **URL has NO filters**: Leaves filters empty, does NOT load from localStorage (covers: links without filters from other pages)
+    -   **Behavior by Scenario**:
+        - Link from another page WITH filters → Apply URL filters
+        - Link from another page WITHOUT filters → Start empty
+        - Page reload (F5) with filters in URL → Maintain URL filters
+        - Pasted URL with filters → Apply URL filters
+        - Language change → Re-map filters from localStorage
+    -   **Helper Functions**:
+        -   `mapLabelsToOptions()`: Converts URL string labels to `{label, value}` objects by searching filter options
+        -   `remapLabelsByValue()`: Re-maps filter labels using `value` as key for language changes (automatic translation)
+    -   **Event Handlers**: Provides `applyFilters()`, `handleReset()`, `applySearch()` with automatic localStorage sync
+    -   **Page Type Aware**: Passes `settings.type` to `useLocalStorageFilters()` for segmented storage
+-   **`useLanguageLinkSync.js`**: Synchronizes Drupal language links (outside React scope) with current filter state. This hook solves the problem of language switcher links being generated server-side by Drupal with static query strings that don't reflect the current React filter state. Key features:
+    -   **DOM Manipulation**: Uses `document.querySelectorAll('.language-link')` to find and update language links outside React's virtual DOM
+    -   **Query String Builder**: Constructs URL query strings from Redux filter state by extracting labels from filter objects
+    -   **Automatic Updates**: Listens to changes in `filters.countries`, `filters.topics`, `filters.typeOfArticles`, and `filters.search` via `useEffect`
+    -   **Drupal Compatibility**: Updates both `href` attribute and `data-drupal-link-query` attribute to maintain Drupal's link system
+    -   **Fallback Handling**: Gracefully handles cases where no language links are found (e.g., single-language sites)
+    -   **Example**: When user applies filter "Argentina", all language links automatically update from `/en/blog` to `/en/blog?countries=Argentina` and `/es/blog?countries=Argentina`
 
-export const IdbTable = LitToReactComponent('idb-table');
-export const IdbAccordion = LitToReactComponent('idb-accordion');
-export const IdbAccordionPanel = LitToReactComponent('idb-accordion-panel');
-export const IdbStyledText = LitToReactComponent('idb-styled-text');
-export const IdbSectionWrapper = LitToReactComponent('idb-section-wrapper');
-export const IdbTabGroup = LitToReactComponent('idb-tab-group');
-export const IdbTabPanel = LitToReactComponent('idb-tab-panel');
-export const IdbTabMemo = LitToReactComponent('idb-tab-memo');
-// ... etc
+### `components/filters/FilterBar.jsx`
+-   Wraps the Lit Web Component `<idb-filter-bar>`.
+-   Uses the `useFilterControls` hook to get filter state, settings, and event handlers.
+-   Passes `applyFilters`, `handleReset`, and `applySearch` handlers to the Lit component via props.
+-   Renders the search input and optional author button based on the page type.
+
+### `components/filters/filter-button-panel/FilterButtonPanel.jsx`
+-   A simplified version of `FilterBar.jsx` used in different layouts.
+-   Also uses the `useFilterControls` hook and wraps `<idb-filter-bar>`.
+-   Provides the same filtering functionality but with a different UI configuration (e.g., no search input slot).
+
+### `containers/posts/posts.jsx`
+-   The main container for displaying blog content, connected to the `blogs` and `settings` slices of the Redux store.
+-   Triggers an initial data fetch by dispatching `fetchBlogs` in a `useEffect` hook on component mount.
+-   Handles three key UI states:
+    -   **Error State:** If `blogsState.error` is truthy, it renders an `<IdbPanelAlert>` with a warning message configured in the `settings` slice.
+    -   **Empty State:** If the API call succeeds but returns no posts, it renders an `<IdbPanelAlert>` with an informational message.
+    -   **Content State:** Renders the list of posts using the `<BlogCards>` component.
+-   Memoizes the `blogCards` element using `useMemo` to prevent re-rendering the list if the `posts` and `isLoading` props haven't changed.
+
+### `components/posts/BlogCards.jsx` & `PostCard.jsx`
+-   `BlogCards.jsx` is responsible for rendering the list of post cards.
+-   It implements the **skeleton loading** pattern. If `isLoading` is `true` and there are no posts, it generates a temporary array of 10 items and renders a `PostCard` for each, passing the `isLoading` prop down.
+-   `PostCard.jsx` is a presentational component that wraps the `<idb-post-card>` Lit web component. It passes props like `is-loading`, `title`, and `image-url` to the underlying web component, ensuring it displays correctly in both loading and loaded states.
+
+### Redux Slices (`/slices`)
+-   **`filterSlice.jsx`**:
+    -   Holds the state for all search criteria: `search`, `topics`, `countries`, `typeOfArticles`, `page`, and `pager` metadata.
+    -   Filter values are stored as objects with `{ label, value }` structure.
+    -   `syncFiltersFromURL`: A reducer that updates filter state from URL parameters (used only on initial load).
+    -   `setFilter`: A reducer that updates the filter state with new values.
+    -   `setPager`: A reducer that updates pagination metadata from API responses.
+    -   `selectQueryString`: A selector that builds the API query string by extracting `value` properties from filter objects and formatting them for the Drupal REST API.
+-   **`filterSlice` thunks (`thunks.jsx`)**:
+    -   `updateFilter`: An async thunk that dispatches `setFilter` to update the Redux state.
+-   **`blogsSlice.jsx`**:
+    -   Manages the `posts` array, a global `isLoading` flag, and any API `error` messages.
+    -   `setBlogs`: Sets the posts array and clears loading/error states.
+    -   `setIsLoading`: Updates the loading state.
+    -   `setError`: Sets an error message and clears posts.
+-   **`blogsSlice` thunks (`thunks.jsx`)**:
+    -   `fetchBlogs`: Fetches blog posts from the Drupal REST API using the current Redux filter state.
+-   **`settingsSlice.jsx`**:
+    -   Stores the initial configuration passed from Drupal via the `data-default-props` attribute.
+    -   Includes available filter options, UI labels, page type, and other configuration.
+
+## 7. Lit Web Component Integration
+
+A core architectural feature of this project is the seamless integration of Lit-based Web Components into the React application. This is primarily handled by the `src/helpers/litComponents.jsx` file.
+
+-   **`@lit/react` Wrapper:** It uses the `createComponent` utility from the official `@lit/react` library to create React-compatible wrappers for custom elements.
+-   **`LitToReactComponent` Factory:** A custom factory function, `LitToReactComponent`, is used to generate these wrappers. It takes a tag name (e.g., `"idb-post-card"`) and an optional events map.
+-   **Dynamic Import & Registration:** The helper first imports all necessary Lit components to ensure their custom elements are registered with the browser via `customElements.define()`.
+-   **Exported React Components:** Each wrapped component is then exported as a standard React component (e.g., `IdbPostCard`), which can be imported and used throughout the application with JSX syntax, props, and event handlers.
+
+This pattern provides a robust and maintainable bridge between the two technologies, allowing developers to use feature-rich Web Components as if they were native React components.
+
+## 8. Build and Drupal Integration
+
+### Build Process
+The project uses **Vite** for development and building. To create a production build, run:
+```bash
+npm run build
 ```
+This command compiles the React application and outputs optimized, minified JS and CSS files into the `dist/assets/` directory.
 
-### Uso en componentes React:
+### Drupal Integration
+The compiled assets are integrated into Drupal via the module's library definition.
 
-```jsx
-// Table.jsx
-<IdbTable mobile-accordion={true}>
-  <table slot="table">
-    {/* Desktop view */}
-  </table>
-  <IdbAccordion bg-color-none slot="accordion">
-    {/* Mobile view */}
-  </IdbAccordion>
-</IdbTable>
-```
+1.  **Library Definition (`idb_blogs.libraries.yml`):** The generated JS and CSS bundles are defined as a Drupal library. This tells Drupal how to load the application's assets.
 
----
+    ```yaml
+    idb_react_search_blogs:
+      css:
+        base:
+          js/react_search_blogs/dist/assets/blog_search_posts.bundle.css: { preprocess: false, minified: true }
+      js:
+        js/react_search_blogs/dist/assets/blog_search_posts.bundle.js: { preprocess: false, minified: true }
+      dependencies:
+        - core/drupalSettings
+    ```
 
-## 📝 Beneficios del Cambio
+2.  **Twig Template:** The application is mounted onto a specific `div` in a Twig template. Initial properties (like filter options and layout type) are passed from Drupal to the React app via a `data-default-props` attribute on this element.
 
-### 1. **Compatibilidad con Drupal**
-- ✅ Elimina errores de registro duplicado
-- ✅ Permite convivencia con componentes pre-registrados
-- ✅ No interfiere con el ecosistema Drupal existente
+    ```twig
+    <div id="idb-search-blogs" data-default-props="{{- props|json_encode -}}"></div>
+    ```
 
-### 2. **Flexibilidad de Deployment**
-- ✅ Funciona en páginas Drupal
-- ✅ Funciona como aplicación standalone
-- ✅ Soporta múltiples instancias en misma página
-
-### 3. **Mantenibilidad**
-- ✅ Patrón consistente en todos los componentes
-- ✅ Código más explícito (registro visible)
-- ✅ Fácil debugging (se ve exactamente cuándo se registra)
-
-### 4. **Type Safety**
-- ✅ Mantiene TypeScript declarations
-- ✅ Preserva autocompletado en IDEs
-- ✅ No rompe contratos de tipos existentes
-
----
-
-## ⚠️ Consideraciones Importantes
-
-### No afecta:
-- ❌ Funcionalidad de los componentes
-- ❌ Props/attributes disponibles
-- ❌ Eventos emitidos
-- ❌ Estilos o rendering
-- ❌ Performance
-
-### Sí afecta:
-- ✅ **Solo** el momento y condición de registro en CustomElementRegistry
-- ✅ Permite que el componente sea registrado por terceros (Drupal)
-
----
-
-## 🚀 Resultado Final
-
-**Antes de los cambios:**
-```
-Error: DOMException: Failed to execute 'define' on 'CustomElementRegistry'
-❌ Portfolio Results no carga en Drupal
-```
-
-**Después de los cambios:**
-```
-✅ Portfolio Results funciona en Drupal
-✅ Portfolio Results funciona standalone
-✅ Sin errores en consola
-✅ Todos los componentes Lit funcionan correctamente
-```
-
----
-
-## 📚 Referencias
-
-### Web Components Standards:
-- [Custom Elements v1 Spec](https://html.spec.whatwg.org/multipage/custom-elements.html)
-- [CustomElementRegistry API](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry)
-
-### Lit Documentation:
-- [Defining Components](https://lit.dev/docs/components/defining/)
-- [Component Decorators](https://lit.dev/docs/components/decorators/)
-
-### Related Issues:
-- Issue típico: "Attempted to define custom element twice"
-- Solución común en monorepos y micro-frontends
-- Patrón usado en arquitecturas con shared components
-
----
-
-**Elaborado por:** Claude Code
-**Fecha:** 2025-11-21
-**Proyecto:** IDB Impact Framework - Portfolio Results
-**Branch:** vn-ebf-imfr-v2
+3.  **Initialization (`settingsSlice.jsx`):** The `initializeAppSettings` thunk (in `src/slices/settings/thunks.jsx`) reads the `data-default-props` attribute from the DOM, parses it, and dispatches the `initializeSettings` action to populate the `settings` slice in the Redux store. This bootstraps the application with its required configuration.
